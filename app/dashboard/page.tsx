@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { logout } from "@/app/actions/auth";
 import { addHabit } from "@/app/actions/habits";
 import { toggleHabitLog } from "@/app/actions/habit-logs";
 import { getTodayDateString } from "@/lib/today";
 import { addDays, getStrengthWindow, calculateStrengthScore } from "@/lib/strength";
+import { Header } from "@/app/components/Header";
+import { StrengthBadge } from "@/app/components/StrengthBadge";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -81,91 +82,85 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col p-6 max-w-xl w-full mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <form action={logout}>
+    <div className="flex flex-1 flex-col">
+      <Header userEmail={user.email ?? ""} />
+
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-8">
+        <h1 className="mb-6 text-2xl font-semibold tracking-tight">Habits</h1>
+
+        <form action={addHabit} className="mb-8 flex gap-2">
+          <input
+            type="text"
+            name="name"
+            placeholder="e.g. Drink more water"
+            required
+            className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/30 dark:border-zinc-700 dark:bg-zinc-900"
+          />
           <button
             type="submit"
-            className="border rounded px-4 py-2 text-sm font-medium"
+            className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover"
           >
-            Log out
+            Add habit
           </button>
         </form>
-      </div>
 
-      <p className="text-zinc-600 mb-6">Signed in as {user.email}</p>
-
-      <form action={addHabit} className="flex gap-2 mb-8">
-        <input
-          type="text"
-          name="name"
-          placeholder="e.g. Drink more water"
-          required
-          className="flex-1 border rounded px-3 py-2 text-sm"
-        />
-        <button
-          type="submit"
-          className="bg-zinc-900 text-white rounded px-4 py-2 text-sm font-medium hover:bg-zinc-700"
-        >
-          Add habit
-        </button>
-      </form>
-
-      {habits && habits.length > 0 ? (
-        <ul className="flex flex-col gap-2">
-          {habits.map((habit) => {
-            const done = doneToday.has(habit.id);
-            const strength = strengthByHabit.get(habit.id) ?? 0;
-            return (
-              <li
-                key={habit.id}
-                className="flex items-center gap-3 border rounded px-3 py-2 text-sm"
-              >
-                <form action={toggleHabitLog}>
-                  <input type="hidden" name="habitId" value={habit.id} />
-                  <input
-                    type="hidden"
-                    name="wasDone"
-                    value={done ? "true" : "false"}
-                  />
-                  <button
-                    type="submit"
-                    aria-pressed={done}
-                    aria-label={
+        {habits && habits.length > 0 ? (
+          <ul className="flex flex-col gap-3">
+            {habits.map((habit) => {
+              const done = doneToday.has(habit.id);
+              const strength = strengthByHabit.get(habit.id) ?? 0;
+              return (
+                <li
+                  key={habit.id}
+                  className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm transition-colors dark:border-zinc-800 dark:bg-zinc-900"
+                >
+                  <form action={toggleHabitLog}>
+                    <input type="hidden" name="habitId" value={habit.id} />
+                    <input
+                      type="hidden"
+                      name="wasDone"
+                      value={done ? "true" : "false"}
+                    />
+                    <button
+                      type="submit"
+                      aria-pressed={done}
+                      aria-label={
+                        done
+                          ? `Mark ${habit.name} as not done today`
+                          : `Mark ${habit.name} as done today`
+                      }
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs leading-none transition-colors ${
+                        done
+                          ? "border-emerald-600 bg-emerald-600 text-white"
+                          : "border-zinc-300 hover:border-emerald-500 dark:border-zinc-600"
+                      }`}
+                    >
+                      {done ? "✓" : ""}
+                    </button>
+                  </form>
+                  <Link
+                    href={`/habits/${habit.id}`}
+                    className={`text-sm font-medium hover:underline ${
                       done
-                        ? `Mark ${habit.name} as not done today`
-                        : `Mark ${habit.name} as done today`
-                    }
-                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs leading-none ${
-                      done
-                        ? "bg-zinc-900 border-zinc-900 text-white"
-                        : "border-zinc-400 hover:border-zinc-600"
+                        ? "text-zinc-400 line-through dark:text-zinc-500"
+                        : "text-zinc-900 dark:text-zinc-100"
                     }`}
                   >
-                    {done ? "✓" : ""}
-                  </button>
-                </form>
-                <Link
-                  href={`/habits/${habit.id}`}
-                  className={`hover:underline ${
-                    done ? "line-through text-zinc-400" : "text-zinc-900"
-                  }`}
-                >
-                  {habit.name}
-                </Link>
-                <span className="ml-auto shrink-0 text-xs font-medium text-zinc-500 border rounded px-1.5 py-0.5">
-                  Strength: {strength}%
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <p className="text-zinc-500 text-sm">
-          No habits yet — add your first one above.
-        </p>
-      )}
+                    {habit.name}
+                  </Link>
+                  <div className="ml-auto">
+                    <StrengthBadge strength={strength} />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            No habits yet — add your first one above.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

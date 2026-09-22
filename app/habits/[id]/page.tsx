@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getTodayDateString } from "@/lib/today";
 import { getStrengthWindow, calculateStrengthScore } from "@/lib/strength";
 import { getMonthGrid } from "@/lib/calendar";
+import { Header } from "@/app/components/Header";
+import { StrengthBadge } from "@/app/components/StrengthBadge";
 
 const MONTH_PARAM_RE = /^(\d{4})-(\d{2})$/;
 
@@ -145,71 +147,80 @@ export default async function HabitDetailPage(
   const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
-    <div className="flex flex-1 flex-col p-6 max-w-xl w-full mx-auto">
-      <Link href="/dashboard" className="text-sm text-zinc-500 mb-4">
-        ← Back to dashboard
-      </Link>
+    <div className="flex flex-1 flex-col">
+      <Header userEmail={user.email ?? ""} />
 
-      <div className="flex items-center justify-between gap-3 mb-2">
-        <h1 className="text-2xl font-semibold">{habit.name}</h1>
-        <span className="shrink-0 text-sm font-medium text-zinc-600 border rounded px-2 py-1">
-          Strength: {strength}%
-        </span>
-      </div>
-
-      <div className="flex items-center justify-between mt-6 mb-3">
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-6 py-8">
         <Link
-          href={`/habits/${habit.id}?month=${monthParamString(prev.year, prev.month)}`}
-          className="border rounded px-3 py-1 text-sm"
+          href="/dashboard"
+          className="mb-4 text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
         >
-          ← Prev
+          ← Back to dashboard
         </Link>
-        <span className="text-sm font-medium">{monthLabel}</span>
-        <Link
-          href={`/habits/${habit.id}?month=${monthParamString(next.year, next.month)}`}
-          className="border rounded px-3 py-1 text-sm"
-        >
-          Next →
-        </Link>
-      </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center text-xs text-zinc-500 mb-1">
-        {weekdayLabels.map((label) => (
-          <div key={label}>{label}</div>
-        ))}
-      </div>
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {habit.name}
+          </h1>
+          <StrengthBadge strength={strength} />
+        </div>
 
-      <div className="grid grid-cols-7 gap-1">
-        {monthGrid.flatMap((week, weekIndex) =>
-          week.map((cell, dayIndex) => {
-            if (!cell) {
-              return <div key={`${weekIndex}-${dayIndex}`} />;
-            }
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="mb-4 flex items-center justify-between">
+            <Link
+              href={`/habits/${habit.id}?month=${monthParamString(prev.year, prev.month)}`}
+              className="rounded-lg border border-zinc-300 px-3 py-1 text-sm font-medium text-zinc-600 transition-colors hover:border-accent hover:text-accent dark:border-zinc-700 dark:text-zinc-300"
+            >
+              ← Prev
+            </Link>
+            <span className="text-sm font-semibold">{monthLabel}</span>
+            <Link
+              href={`/habits/${habit.id}?month=${monthParamString(next.year, next.month)}`}
+              className="rounded-lg border border-zinc-300 px-3 py-1 text-sm font-medium text-zinc-600 transition-colors hover:border-accent hover:text-accent dark:border-zinc-700 dark:text-zinc-300"
+            >
+              Next →
+            </Link>
+          </div>
 
-            const done = completedDates.has(cell.date);
-            const isToday = cell.date === today;
+          <div className="mb-2 grid grid-cols-7 gap-1.5 text-center text-xs font-medium text-zinc-400 dark:text-zinc-500">
+            {weekdayLabels.map((label) => (
+              <div key={label}>{label}</div>
+            ))}
+          </div>
 
-            return (
-              <div
-                key={cell.date}
-                // Every cell keeps a border (not just non-done ones) and
-                // `done` uses a color, not zinc-900, for its fill — zinc-900
-                // is close enough to this app's dark-mode background
-                // (globals.css) that a borderless near-black fill on a
-                // near-black page was effectively invisible.
-                className={`flex aspect-square items-center justify-center rounded border text-sm ${
-                  done
-                    ? "border-emerald-600 bg-emerald-600 text-white"
-                    : isToday
-                      ? "border-zinc-400 text-zinc-900 dark:text-zinc-100"
-                      : "border-zinc-200 text-zinc-400"
-                }`}
-              >
-                {cell.day}
-              </div>
-            );
-          })
-        )}
+          <div className="grid grid-cols-7 gap-1.5">
+            {monthGrid.flatMap((week, weekIndex) =>
+              week.map((cell, dayIndex) => {
+                if (!cell) {
+                  return <div key={`${weekIndex}-${dayIndex}`} />;
+                }
+
+                const done = completedDates.has(cell.date);
+                const isToday = cell.date === today;
+
+                return (
+                  <div
+                    key={cell.date}
+                    // Every cell keeps a border (not just non-done ones) and
+                    // `done` uses a color, not zinc-900, for its fill — zinc-900
+                    // is close enough to this app's dark-mode background
+                    // (globals.css) that a borderless near-black fill on a
+                    // near-black page was effectively invisible.
+                    className={`flex aspect-square items-center justify-center rounded-lg border text-sm font-medium transition-colors ${
+                      done
+                        ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                        : isToday
+                          ? "border-accent bg-accent/5 text-zinc-900 dark:text-zinc-100"
+                          : "border-zinc-100 bg-zinc-50 text-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-600"
+                    }`}
+                  >
+                    {cell.day}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
