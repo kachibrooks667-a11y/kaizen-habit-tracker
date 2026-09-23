@@ -7,6 +7,7 @@ import { getTodayDateString } from "@/lib/today";
 import { addDays, getStrengthWindow, calculateStrengthScore } from "@/lib/strength";
 import { Header } from "@/app/components/Header";
 import { StrengthBadge } from "@/app/components/StrengthBadge";
+import { DeleteHabitButton } from "@/app/components/DeleteHabitButton";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -148,8 +149,9 @@ export default async function DashboardPage() {
                   >
                     {habit.name}
                   </Link>
-                  <div className="ml-auto">
+                  <div className="ml-auto flex items-center gap-1">
                     <StrengthBadge strength={strength} />
+                    <DeleteHabitButton habitId={habit.id} habitName={habit.name} />
                   </div>
                 </li>
               );

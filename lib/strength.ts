@@ -14,7 +14,7 @@ export function addDays(dateString: string, days: number): string {
   return date.toISOString().slice(0, 10);
 }
 
-function daysBetween(fromDateString: string, toDateString: string): number {
+export function daysBetween(fromDateString: string, toDateString: string): number {
   const from = new Date(`${fromDateString}T00:00:00Z`).getTime();
   const to = new Date(`${toDateString}T00:00:00Z`).getTime();
   return Math.round((to - from) / MS_PER_DAY);
